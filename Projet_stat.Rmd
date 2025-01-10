@@ -1,0 +1,10 @@
+# Projet Rossi
+
+```{r}
+Rossi <- read.csv("Rossi.csv", sep = ";")
+```
+
+```{r}
+
+```
+
