@@ -5,6 +5,38 @@ Rossi <- read.csv("Rossi.csv", sep = ";")
 ```
 
 ```{r}
+head(Rossi)
+```
 
+
+```{r}
+library(survival)
+library(ggsurvfit)
+# Ajuster le modèle de survie avec stratification
+surv_model <- survfit(Surv(week, arrest) ~ fin, data = Rossi)
+
+# Tracer les courbes avec ggsurvfit
+ggsurvfit(surv_model) +
+  labs(
+    x = "Weeks",
+    y = "Overall survival probability",
+    title = "Survival Curves by fin"
+  ) +
+  add_confidence_interval() +
+  theme_minimal()
+```
+```{r}
+# Ajuster le modèle de survie avec stratification
+surv_model <- survfit(Surv(week, arrest) ~ race, data = Rossi)
+
+# Tracer les courbes avec ggsurvfit
+ggsurvfit(surv_model) +
+  labs(
+    x = "Weeks",
+    y = "Overall survival probability",
+    title = "Survival Curves by fin"
+  ) +
+  add_confidence_interval() +
+  theme_minimal()
 ```
 
