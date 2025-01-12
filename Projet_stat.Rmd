@@ -1,21 +1,104 @@
-# Projet Rossi
+---
+title: "Statistiques SD Project"
+author: "Alice Clément & Nino Pujals"
+date: "2025-01-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+The objective of this report is to provide an analysis of the *Rossi* dataset which analyses the time before recidive of criminals in the USA depending on numerous covariates. 
+
+The main question is the following: **Does a financial help reduce the risk of recidive ?**
+
+# Preparing dataset
+
+## Load packages
+
+```{r warning=FALSE, message=FALSE, error=FALSE, results='hide'}
+packages_names = c(
+  'tidyverse',
+  'survival',
+  'ggsurvfit'
+)
+
+lapply(packages_names, library, character.only = TRUE)
+```
+
+## Load dataset
 
 ```{r}
 Rossi <- read.csv("Rossi.csv", sep = ";")
 ```
 
-```{r}
+## Inspect dataset
+
+### General information
+```{r examine data}
+head(Rossi)
+
+dim_Rossi = dim(Rossi)
+cat(paste("The dataset contains", dim_Rossi[1], "samples and", dim_Rossi[2], "features."))
+
+col_names = colnames(Rossi)
+cat(paste(c("The features are:", col_names, ".")))
+
+unique_dt = unique((lapply(Rossi, class)))
+cat(paste("The features of the dataset have the following datatypes:", paste(unique_dt) , "."))
+```
+
+Here we can see that all the features of type `emp` correspond of being employed during the said week. The `NA` values correspond to weeks that occurred after the first arrest.
+
+### New variable creation
+
+Let us create a new variable to count the number of weeks of employment:
+
+```{r creating new variable}
+# extracting useful columns
+col_names = unlist(paste("emp", as.character(1:52), sep=""))
+col_names_ind = which(colnames(Rossi) %in% col_names)
+
+# converting "yes"/"no" to 1/0
+convert_yes_no <- function(x){
+  ifelse(x == "yes", 1, 0)
+}
+Rossi <- Rossi %>% 
+  mutate(across(all_of(col_names_ind), convert_yes_no)) 
+
+# creating new feature
+Rossi <- Rossi %>%
+  mutate(nb_emp = rowSums(Rossi[col_names_ind], na.rm=TRUE))
+
+# removing useless features
+Rossi <- Rossi %>%
+  select(-all_of(col_names_ind))
+
 head(Rossi)
 ```
 
+## Missing values
+
+```{r missing values search}
+nb_mv = sum(is.na(Rossi))
+pr_mv = nb_mv / prod(dim_Rossi) * 100
+cat(paste("The number of missing values inside the dataset is:", nb_mv, "which makes for", pr_mv,"% of the dataset."))
+```
+
+There is no missing values in the dataset, thus it is ready to be used.
+
+# Survival model
+
+## Financial aid
 
 ```{r}
-library(survival)
-library(ggsurvfit)
-# Ajuster le modèle de survie avec stratification
+# Adjust survival model with stratification
 surv_model <- survfit(Surv(week, arrest) ~ fin, data = Rossi)
 
-# Tracer les courbes avec ggsurvfit
+# plot with ggsurvfit
 ggsurvfit(surv_model) +
   labs(
     x = "Weeks",
@@ -25,6 +108,11 @@ ggsurvfit(surv_model) +
   add_confidence_interval() +
   theme_minimal()
 ```
+
+Here we can see that ex-prisoners that receive a financial aid upon their release have a higher survival function than those who do not.
+
+## Race
+
 ```{r}
 # Ajuster le modèle de survie avec stratification
 surv_model <- survfit(Surv(week, arrest) ~ race, data = Rossi)
@@ -40,3 +128,4 @@ ggsurvfit(surv_model) +
   theme_minimal()
 ```
 
+Here we can see that ex-prisoners that are of black ethnicity have a lower survival function than those who are not.
