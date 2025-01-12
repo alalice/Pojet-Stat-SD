@@ -32,7 +32,7 @@ lapply(packages_names, library, character.only = TRUE)
 ## Load dataset
 
 ```{r}
-Rossi <- read.csv("Rossi.csv", sep = ";")
+Rossi <- read.csv("Rossi.csv", sep = ";", row.names=1)
 ```
 
 ## Inspect dataset
@@ -129,3 +129,16 @@ ggsurvfit(surv_model) +
 ```
 
 Here we can see that ex-prisoners that are of black ethnicity have a lower survival function than those who are not.
+
+## Accelerated Feature Time Model
+
+```{r}
+aft_model <- survreg(formula = Surv(week, arrest) ~ fin + age + race + wexp + mar + paro + prio + educ + nb_emp, data = Rossi)
+summary(aft_model)
+```
+
+We consider only the features with significantly low p-value. 
+
+Each week of employment during the year after the release increases the time before arrest by 3%. 
+
+Each prior arrest decreases the time before arrest by 4%. 
